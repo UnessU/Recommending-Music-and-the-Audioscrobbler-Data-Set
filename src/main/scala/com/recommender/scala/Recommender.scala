@@ -1,5 +1,6 @@
 package com.recommender.scala
 
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
@@ -59,6 +60,22 @@ class Recommender(private val spark :SparkSession) {
     }.collect().toMap
   }
 
+  //to convert all artist IDs to a canonical ID
+  //broadcast variable = makes Spark send and hold in memory just one copy for each executor in the cluster,  rather than shipping a copy of it with tasks
+ def buildCount(rawUserArtistData : Dataset[String], bArtistAlias : Broadcast[Map[Int, Int]]) : DataFrame = {
+   rawUserArtistData.map{ line =>
+     val Array(userID, artistID, count) = line.split(' ').map( x => x.toInt)
+     val finalArtistID = bArtistAlias.value.getOrElse(artistID, artistID) //get Artist alias if it exists, otherwise get original artist
+     (userID, finalArtistID, count )
+   }.toDF("user", "artist", "count")
+ }
+
+ def buildingModel(rawUserArtistData : Dataset[String],
+                   rawArtistData : Dataset[String],
+                   rawArtistAlias : Dataset[String]) : Unit ={
+   val bArtistAlias = spark.sparkContext.broadcast(artistAliasDF(rawArtistAlias))
+   val trainData = buildCount(rawUserArtistData, bArtistAlias).cache()
+ }
 
 
 
