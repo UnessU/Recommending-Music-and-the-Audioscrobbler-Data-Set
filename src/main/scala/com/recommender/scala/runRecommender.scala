@@ -2,6 +2,7 @@ package com.recommender.scala
 
 
 import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.ml.recommendation.{ALS, ALSModel}
 
 object runRecommender {
   def main(args :Array[String]): Unit = {
@@ -13,6 +14,7 @@ object runRecommender {
     val rawArtistData = spark.read.textFile(base + "artist_data.txt")
     val rawArtistAlias = spark.read.textFile(base + "artist_alias.txt")
     val Recommender = new Recommender(spark)
-    Recommender.preparation(rawUserArtistData, rawArtistData,rawArtistAlias )
+    //Recommender.preparation(rawUserArtistData, rawArtistData,rawArtistAlias )
+    Recommender.buildingModel(rawUserArtistData, rawArtistData, rawArtistAlias)
 
 }}
