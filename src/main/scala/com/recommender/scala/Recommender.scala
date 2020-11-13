@@ -3,6 +3,9 @@ package com.recommender.scala
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.ml.recommendation.{ALS, ALSModel}
+
+import scala.util.Random
 
 class Recommender(private val spark :SparkSession) {
 
@@ -74,7 +77,22 @@ class Recommender(private val spark :SparkSession) {
                    rawArtistData : Dataset[String],
                    rawArtistAlias : Dataset[String]) : Unit ={
    val bArtistAlias = spark.sparkContext.broadcast(artistAliasDF(rawArtistAlias))
+   //suggests to Spark that this DataFrame should be temporarily stored after being computed and kept in memory in the cluster.
    val trainData = buildCount(rawUserArtistData, bArtistAlias).cache()
+
+   val model = new ALS().
+     setSeed(Random.nextLong()) //Use random seed
+     .setImplicitPrefs(true)
+     .setRank(10)
+     .setRegParam(0.01)
+     .setAlpha(1.0)
+     .setMaxIter(5)
+     .setUserCol("user")
+     .setItemCol("artist")
+     .setRatingCol("count")
+     .setPredictionCol("prediction")
+     .fit(trainData)
+
  }
 
 
