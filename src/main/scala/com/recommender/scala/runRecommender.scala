@@ -16,5 +16,6 @@ object runRecommender {
     val Recommender = new Recommender(spark)
     //Recommender.preparation(rawUserArtistData, rawArtistData,rawArtistAlias )
     Recommender.buildingModel(rawUserArtistData, rawArtistData, rawArtistAlias)
+    Recommender.evaluation(rawUserArtistData, rawArtistAlias)
 
 }}
