@@ -260,7 +260,39 @@ class Recommender(private val spark :SparkSession) {
       select("user", "artist", "prediction")
   }
 
+  def recommend(rawUserArtistData: Dataset[String],
+                rawArtistData: Dataset[String],
+                rawArtistAlias: Dataset[String]) : Unit ={
+    val bArtistAlias = spark.sparkContext.broadcast(artistAliasDF(rawArtistAlias))
+    val allData = buildCounts(rawUserArtistData, bArtistAlias).cache()
 
+    val model = new ALS()
+      .setSeed(Random.nextLong())
+      .setImplicitPrefs(true)
+      .setRank(10)
+      .setRegParam(1.0)
+      .setAlpha(40.0)
+      .setMaxIter(20)
+      .setUserCol("user")
+      .setItemCol("artist")
+      .setRatingCol("count")
+      .setPredictionCol("prediction")
+      .fit(allData)
+
+    allData.unpersist()
+
+    val userID = 2093760
+    val topRecommendation = makeRecommendations(model, userID, 5)
+
+    val recommendedArtistIDs = topRecommendation.select("artist").as[Int].collect()
+
+    val artistById = artistByID(rawArtistData)
+    artistById.join(spark.createDataset(recommendedArtistIDs).toDF("id"), "id").select("name").show()
+
+    model.userFactors.unpersist()
+    model.itemFactors.unpersist()
+
+  }
 
 
 
