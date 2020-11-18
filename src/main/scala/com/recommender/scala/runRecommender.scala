@@ -15,7 +15,8 @@ object runRecommender {
     val rawArtistAlias = spark.read.textFile(base + "artist_alias.txt")
     val Recommender = new Recommender(spark)
     //Recommender.preparation(rawUserArtistData, rawArtistData,rawArtistAlias )
-    Recommender.buildingModel(rawUserArtistData, rawArtistData, rawArtistAlias)
-    Recommender.evaluation(rawUserArtistData, rawArtistAlias)
+    //Recommender.buildingModel(rawUserArtistData, rawArtistData, rawArtistAlias)
+    //Recommender.evaluation(rawUserArtistData, rawArtistAlias)
+    Recommender.recommend(rawUserArtistData, rawArtistData, rawArtistAlias)
 
 }}
